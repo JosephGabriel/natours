@@ -1,4 +1,3 @@
-const { ESLint } = require('eslint');
 const mongoose = require('mongoose');
 
 const tourSchema = mongoose.Schema({
@@ -53,6 +52,7 @@ const tourSchema = mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+    select: false,
   },
   startDates: [Date],
 });

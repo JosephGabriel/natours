@@ -1,21 +1,15 @@
-const { match } = require('assert');
-const fs = require('fs');
 const Tour = require('../models/tour');
 
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
-);
+// exports.checkId = (req, res, next, val) => {
+//   if (val * 1 > tours.length) {
+//     return res.status(404).json({
+//       status: 'fail',
+//       message: 'Invalid ID',
+//     });
+//   }
 
-exports.checkId = (req, res, next, val) => {
-  if (val * 1 > tours.length) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
-  }
-
-  next();
-};
+//   next();
+// };
 
 exports.getAllTours = async (req, res) => {
   try {
@@ -25,13 +19,38 @@ exports.getAllTours = async (req, res) => {
 
     excludedFields.forEach((el) => delete queryObj[el]);
 
-    let queryStr = JSON.stringify(queryObj)
+    let queryStr = JSON.stringify(queryObj);
 
-    queryStr = queryStr.replace(/\b(gt|gte|lte|lt)/b/g,match => `$${match}`)
+    queryStr = queryStr.replace(/\b(gt|gte|lte|lt)\b/g, (match) => `$${match}`);
 
-    const query = Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
 
-    const tours = await query();
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      query = query.select('-__v');
+    }
+
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      const numTours = await Tour.countDocuments();
+      if (skip >= numTours) throw new Error('This page does not exists');
+    }
+
+    const tours = await query;
 
     res.status(200).json({
       status: 'success',
@@ -41,7 +60,7 @@ exports.getAllTours = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(200).json({
+    res.status(404).json({
       status: 'fail',
       message: error,
     });

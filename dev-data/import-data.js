@@ -39,5 +39,5 @@ const deleteData = async () => {
   process.exit();
 };
 
-deleteData();
+//deleteData();
 importData();
