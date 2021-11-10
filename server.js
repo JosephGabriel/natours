@@ -1,5 +1,7 @@
 const dotenv = require('dotenv');
+
 const mongoose = require('mongoose');
+
 dotenv.config({ path: './config.env' });
 
 const app = require('./app');
@@ -13,11 +15,9 @@ mongoose
     useFindAndModify: false,
     useUnifiedTopology: true,
   })
-  .then((con) => {
+  .then(() => {
     console.log('Banco ok');
   });
-
-const x = 23;
 
 app.listen(port, () => {
   console.log(`Server on ${port}`);
