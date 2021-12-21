@@ -4,6 +4,9 @@ const router = express.Router();
 
 const tourController = require('../controllers/tour');
 const authController = require('../controllers/auth');
+const reviewRouter = require('./review');
+
+router.use('/:tourId/reviews', reviewRouter);
 
 router
   .route('/top-5-cheap')
@@ -14,12 +17,17 @@ router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
 
 router
   .route('/')
-  .get(authController.protect, tourController.getAllTours)
+  .get(tourController.getAllTours)
   .post(tourController.createTour);
+
 router
   .route('/:id')
   .get(tourController.getTour)
   .patch(tourController.updateTour)
-  .delete(tourController.deleteTour);
+  .delete(
+    authController.protect,
+    authController.restricTo('admin', 'lead-guide'),
+    tourController.deleteTour
+  );
 
 module.exports = router;

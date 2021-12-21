@@ -2,7 +2,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: '../config.env' });
 
 const Tour = require('../models/tour');
 
@@ -13,12 +13,12 @@ mongoose
     useFindAndModify: false,
     useUnifiedTopology: true,
   })
-  .then((con) => {
+  .then(() => {
     console.log('Banco ok');
   });
 
 const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/data/tours-simple.json`, 'utf8')
+  fs.readFileSync(`${__dirname}/data/tours.json`, 'utf8')
 );
 
 const importData = async () => {
@@ -39,5 +39,5 @@ const deleteData = async () => {
   process.exit();
 };
 
-//deleteData();
+// deleteData();
 importData();
