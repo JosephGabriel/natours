@@ -22,26 +22,47 @@ const handleJWTExpiredError = (err) =>
 const handleJWTError = (err) =>
   new AppError('Your token has expired. Please log in again', 401);
 
-const sendErrorToDevelopment = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    message: err.message,
-    error: err,
-    stack: err.stack,
-  });
-};
-
-const sendErrorToProduction = (err, res) => {
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
+const sendErrorToDevelopment = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
+      error: err,
+      stack: err.stack,
     });
   } else {
-    res.status(500).json({
-      status: 'error',
-      message: 'Something went very wrong!',
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
     });
+  }
+};
+
+const sendErrorToProduction = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    } else {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Something went very wrong!',
+      });
+    }
+  } else {
+    if (err.isOperational) {
+      return res.status(err.statusCode).render('error', {
+        title: 'Something went wrong!',
+        message: err.message,
+      });
+    } else {
+      return res.status(500).render('error', {
+        title: 'Something went wrong!',
+        message: 'Something went very wrong!',
+      });
+    }
   }
 };
 
@@ -50,7 +71,7 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorToDevelopment(err, res);
+    sendErrorToDevelopment(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = Object.assign(err);
 
@@ -74,6 +95,6 @@ module.exports = (err, req, res, next) => {
       error = handleDuplicateFieldDB(error);
     }
 
-    sendErrorToProduction(error, res);
+    sendErrorToProduction(error, req, res);
   }
 };

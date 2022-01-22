@@ -54,7 +54,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
-    role: req.body.role,
+    // role: req.body.role,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
@@ -72,6 +72,7 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
+    // if (!user) {
     return next(new AppError('Invalid email or password', 401));
   }
 
@@ -86,6 +87,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (!token) {
@@ -111,9 +114,37 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   req.user = freshUser;
+  res.locals.user = freshUser;
 
   next();
 });
+
+exports.isLoggedIn = async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      const freshUser = await User.findById(decoded.id);
+
+      if (!freshUser) {
+        return next();
+      }
+
+      if (freshUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      res.locals.user = freshUser;
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
+  next();
+};
 
 exports.restricTo =
   (...roles) =>
@@ -239,3 +270,14 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     active: false,
   });
 });
+
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'Logged out', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+
+  res.status(200).json({
+    status: 'success',
+  });
+};

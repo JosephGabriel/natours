@@ -32,7 +32,7 @@ body {
   font-weight: 300;
   font-family: 'Lato', sans-serif;
   color: #777;
-  padding: 3rem;
+  /* padding: 3rem; */
   min-height: 100vh;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -599,6 +599,10 @@ body {
   );
 }
 
+::-webkit-scrollbar:horizontal {
+  opacity: 0;
+}
+
 .reviews {
   padding: 5rem 0;
   display: grid;
@@ -830,6 +834,7 @@ body {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
+  justify-content: flex-end;
 }
 .footer__nav li {
   margin-left: 1.5rem;
