@@ -9311,12 +9311,11 @@ if (loginForm) {
 if (formUserData) {
   formUserData.addEventListener('submit', function (e) {
     e.preventDefault();
-    var email = document.getElementById('email').value;
-    var name = document.getElementById('name').value;
-    (0, _updateSettings.updateUserSettings)({
-      email: email,
-      name: name
-    }, 'data');
+    var form = new FormData();
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]);
+    (0, _updateSettings.updateUserSettings)(form, 'data');
   });
 }
 
@@ -9394,7 +9393,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "37535" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "38731" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
